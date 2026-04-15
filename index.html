@@ -1,437 +1,737 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MG10 / Portfolio System</title>
+<title>Ying Shan, Chao / Portfolio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  :root {
+    --teal-deep:    #04201e;
+    --teal-dark:    #06100f;
+    --teal-main:    #1a8c7e;
+    --teal-bright:  #1ab09c;
+    --teal-muted:   #4a7a74;
+    --teal-faint:   #2a5a54;
+    --teal-dim:     #4a6460;
+    --teal-ghost:   #2a7a6e;
+    --text-hi:      #d4ebe8;
+    --text-mid:     #8ab5b0;
+    --text-lo:      #4a7a74;
+    --gold:         #b5861e;
+    --border-gold:  rgba(181,134,30,0.35);
+    --border-teal:  rgba(26,140,126,0.15);
+    --error-color:  #e05533;
+    --error-border: #c44422;
+
+    /* shape tokens */
+    --r-interactive: 24px 24px 0 24px; /* TL TR BR BL — 押せるもの: 右下=0 */
+    --r-static:      12px 0 12px 0;    /* 押せないもの: 左上・右下=12、右上・左下=0 */
+  }
+
+  /* ── FONT STACK PER LANG ── */
+  :lang(zh-TW) { font-family: 'Noto Sans TC', 'Space Grotesk', sans-serif; }
+  :lang(ja)    { font-family: 'Noto Sans JP', 'Space Grotesk', sans-serif; }
+  :lang(en)    { font-family: 'Space Grotesk', sans-serif; }
+
   body {
-    font-family: 'Space Grotesk', sans-serif;
-    background: #04201e;
+    font-family: 'Space Grotesk', 'Noto Sans TC', sans-serif;
+    background: var(--teal-deep);
     min-height: 100vh;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
-  .portfolio-root {
-    position: relative;
-    min-height: 100vh;
-  }
-
-  /* GATE */
-  .gate {
-    position: fixed; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    background: #04201e;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 100;
-  }
-  .gate.exiting { opacity: 0; transform: scale(1.04); pointer-events: none; }
-  .gate.hidden { display: none; }
-
-  .gate-inner {
-    text-align: center;
-    padding: 2rem;
-    max-width: 420px;
-    width: 100%;
-  }
-
-  .gate-logo {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: #2a7a6e;
-    margin-bottom: 2.5rem;
-    display: flex; align-items: center; gap: 8px; justify-content: center;
-  }
-  .gate-logo-dot {
-    width: 6px; height: 6px; border-radius: 50%; background: #2a7a6e;
-    animation: pulse-dot 2s ease-in-out infinite;
-  }
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
-  }
-
-  .gate-eyebrow {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.4em;
-    color: #2a7a6e;
-    margin-bottom: 6px;
-  }
-
-  .gate-title {
-    font-size: 13px;
-    letter-spacing: 0.25em;
-    color: #8ab5b0;
-    font-family: 'Space Mono', monospace;
-    margin-bottom: 2rem;
-    line-height: 1.8;
-  }
-
-  .gate-input {
-    width: 100%;
-    background: rgba(10, 42, 38, 0.8);
-    border: 1px solid #4a6460;
-    color: #c8e0dd;
-    font-family: 'Space Mono', monospace;
-    font-size: 18px;
-    letter-spacing: 0.5em;
-    text-align: center;
-    padding: 1rem 1.5rem;
-    outline: none;
-    transition: border-color 0.2s;
-    border-radius: 2px;
-  }
-  .gate-input::placeholder {
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    color: #2a7a6e;
-  }
-  .gate-input:focus { border-color: #1a8c7e; }
-  .gate-input.error-border { border-color: #b5861e; }
-  .gate-input.shake { animation: shake 0.4s ease; }
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    20% { transform: translateX(-8px); }
-    40% { transform: translateX(8px); }
-    60% { transform: translateX(-6px); }
-    80% { transform: translateX(6px); }
-  }
-
-  .error-msg {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: #b5861e;
-    opacity: 0;
-    transition: opacity 0.3s;
-    margin-top: 8px;
-    height: 16px;
-  }
-  .error-msg.visible { opacity: 1; }
-
+  /* ── GRID BG ── */
   .grid-bg {
     position: fixed; inset: 0;
     background-image:
-      linear-gradient(rgba(26, 140, 126, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(26, 140, 126, 0.04) 1px, transparent 1px);
+      linear-gradient(rgba(26,140,126,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(26,140,126,0.04) 1px, transparent 1px);
     background-size: 40px 40px;
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
   }
 
-  /* MAIN PAGE */
-  .main-page {
-    position: relative;
-    min-height: 100vh;
-    opacity: 0;
-    transform: scale(0.97);
-    transition: opacity 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
-                transform 0.9s cubic-bezier(0.4, 0, 0.2, 1) 0.3s;
-    pointer-events: none;
-    background: #06100f;
-    z-index: 1;
-  }
-  .main-page.visible {
-    opacity: 1; transform: scale(1); pointer-events: all;
+  /* ── ANIMATIONS ── */
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-9px)} 40%{transform:translateX(9px)}
+    60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
   }
 
-  /* NAV */
-  .nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.2rem 2.5rem;
-    border-bottom: 1px solid rgba(26, 140, 126, 0.15);
+  /* ════════════════════════
+     LANG SWITCHER
+  ════════════════════════ */
+  .lang-bar {
+    position: fixed; top: 1rem; right: 1.5rem;
+    display: flex; gap: 4px;
+    z-index: 200;
   }
-  .nav-logo {
+  .lang-btn {
     font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.25em;
-    color: #1a8c7e;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--teal-dim);
+    background: transparent;
+    border: 1px solid rgba(26,140,126,0.2);
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+    border-radius: var(--r-interactive);
   }
-  .nav-status {
-    display: flex; align-items: center; gap: 6px;
+  .lang-btn:hover        { color: var(--teal-main); border-color: rgba(26,140,126,0.5); }
+  .lang-btn.active       { color: var(--teal-bright); border-color: var(--teal-main); background: rgba(26,140,126,0.1); }
+
+  /* ════════════════════════
+     GATE
+  ════════════════════════ */
+  .gate {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--teal-deep);
+    transition: opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
+    z-index: 100;
+  }
+  .gate.exiting { opacity: 0; transform: scale(1.04); pointer-events: none; }
+  .gate.hidden  { display: none; }
+
+  .gate-inner { text-align: center; padding: 2.5rem 2rem; max-width: 400px; width: 100%; }
+
+  .gate-logo {
     font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: #4a6460;
+    font-size: 13px; letter-spacing: 0.35em; color: var(--teal-ghost);
+    margin-bottom: 3rem;
+    display: flex; align-items: center; gap: 8px; justify-content: center;
   }
-  .status-dot {
-    width: 5px; height: 5px; border-radius: 50%; background: #1a8c7e;
+  .gate-logo-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--teal-ghost);
     animation: pulse-dot 2s ease-in-out infinite;
   }
-
-  /* HERO */
-  .hero {
-    padding: 4rem 2.5rem 2.5rem;
-    max-width: 900px;
+  .gate-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; letter-spacing: 0.4em; color: var(--teal-ghost); margin-bottom: 8px;
   }
+  .gate-heading {
+    font-family: 'Space Mono', monospace;
+    font-size: 14px; letter-spacing: 0.2em; color: var(--text-mid);
+    margin-bottom: 2.5rem; line-height: 2;
+  }
+
+  /* 押せる: 右下=0 */
+  .gate-input {
+    width: 100%;
+    background: rgba(10,42,38,0.75);
+    border: 1px solid var(--teal-dim);
+    color: var(--text-hi);
+    font-family: 'Space Mono', monospace;
+    font-size: 26px; letter-spacing: 0.55em; text-align: center;
+    padding: 1rem 1.5rem; outline: none;
+    transition: border-color 0.2s;
+    border-radius: var(--r-interactive);
+  }
+  .gate-input::placeholder { font-size: 13px; letter-spacing: 0.3em; color: var(--teal-ghost); }
+  .gate-input:focus        { border-color: var(--teal-main); }
+  .gate-input.error-border { border-color: var(--error-border); }
+  .gate-input.shake        { animation: shake 0.4s ease; }
+
+  .error-msg {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px; letter-spacing: 0.25em; color: var(--error-color);
+    opacity: 0; transition: opacity 0.3s; margin-top: 10px; height: 16px;
+  }
+  .error-msg.visible { opacity: 1; }
+
+  /* ════════════════════════
+     MAIN PAGE
+  ════════════════════════ */
+  .main-page {
+    position: relative; min-height: 100vh;
+    opacity: 0; transform: scale(0.97);
+    transition: opacity 0.9s cubic-bezier(0.4,0,0.2,1) 0.3s, transform 0.9s cubic-bezier(0.4,0,0.2,1) 0.3s;
+    pointer-events: none; background: var(--teal-dark); z-index: 1;
+  }
+  .main-page.visible { opacity: 1; transform: scale(1); pointer-events: all; }
+
+  /* ── NAV ── */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.1rem 2.5rem;
+    border-bottom: 1px solid var(--border-teal);
+    position: sticky; top: 0;
+    background: rgba(6,16,15,0.92); backdrop-filter: blur(12px); z-index: 50;
+  }
+  .nav-logo  { font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.25em; color: var(--teal-main); }
+  .nav-right { display: flex; align-items: center; gap: 1.5rem; }
+  .nav-status {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.2em; color: var(--teal-dim);
+  }
+  .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal-main); animation: pulse-dot 2s ease-in-out infinite; }
+
+  /* Inline lang switcher in nav (hidden on gate) */
+  .nav-lang { display: flex; gap: 4px; }
+  .nav-lang .lang-btn { font-size: 12px; padding: 3px 7px; }
+
+  /* ── PAGE BODY ── */
+  .page-body { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; }
+
+  /* ── HERO ── */
+  .hero { padding: 5rem 0 3rem; }
   .hero-eyebrow {
     font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.4em;
-    color: #b5861e;
-    margin-bottom: 1.2rem;
-    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; letter-spacing: 0.45em; color: var(--gold);
+    margin-bottom: 1.4rem; display: flex; align-items: center; gap: 12px;
   }
-  .hero-eyebrow::before {
-    content: '';
-    display: block; width: 24px; height: 1px; background: #b5861e;
-  }
-  .hero-title {
-    font-size: clamp(26px, 4vw, 44px);
-    font-weight: 700;
-    color: #d4ebe8;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.6rem;
-  }
-  .hero-title .accent { color: #1ab09c; }
-  .hero-sub {
-    font-family: 'Space Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    color: #4a7a74;
-    margin-bottom: 2rem;
-  }
-  .hero-tags {
-    display: flex; gap: 8px; flex-wrap: wrap;
-  }
-  .hero-tag {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.2em;
-    color: #1a8c7e;
-    border: 1px solid rgba(26, 140, 126, 0.3);
-    padding: 4px 10px;
-    border-radius: 2px;
+  .hero-eyebrow::before { content:''; display:block; width:28px; height:1px; background:var(--gold); }
+  .hero-name  { font-size: 34px; font-weight: 700; color: var(--text-hi); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 0.3em; }
+  .hero-role  { font-size: 26px; font-weight: 400; color: var(--teal-bright); letter-spacing: 0.01em; margin-bottom: 1.8rem; }
+  .hero-tags  { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-tag   {
+    font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.2em;
+    color: var(--teal-main); border: 1px solid rgba(26,140,126,0.3);
+    padding: 5px 12px; cursor: default;
+    /* 押せる形と同じで装飾用タグはそのまま */
+    border-radius: var(--r-static);
   }
 
-  /* DIVIDER */
-  .divider {
-    height: 1px;
-    background: rgba(26, 140, 126, 0.12);
-    margin: 0 2.5rem;
+  /* ── DIVIDER ── */
+  .divider { height: 1px; background: var(--border-teal); }
+
+  /* ── SECTION ── */
+  .section { padding: 3rem 0; }
+  .section-label { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.45em; color:var(--teal-dim); margin-bottom:1.6rem; }
+
+  /* ── ABOUT + CAREER ── */
+  .about-career-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  @media (max-width: 700px) { .about-career-grid { grid-template-columns: 1fr; } }
+
+  /* 押せない: 左上・右下=12、右上・左下=0 */
+  .about-block, .career-block {
+    background: rgba(10,42,38,0.35);
+    border: 1px solid var(--border-teal);
+    padding: 1.6rem;
+    border-radius: var(--r-static);
+  }
+  .block-title { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.4em; color:var(--teal-dim); margin-bottom:1.1rem; }
+  .about-text  { font-size:14px; color:var(--text-mid); line-height:1.8; }
+  .about-text strong { color:var(--text-hi); font-weight:500; }
+
+  .career-list { display:flex; flex-direction:column; gap:1.25rem; }
+  .career-item { display:flex; gap:1rem; align-items:flex-start; }
+  .career-dot  { margin-top:6px; flex-shrink:0; width:6px; height:6px; border-radius:50%; background:var(--teal-main); border:1px solid rgba(26,140,126,0.4); }
+  .career-year { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.15em; color:var(--teal-dim); min-width:82px; padding-top:2px; }
+  .career-role { font-size:22px; font-weight:600; color:var(--text-hi); line-height:1.25; }
+  .career-company { font-size:14px; color:var(--teal-muted); margin-top:3px; }
+
+  /* freelance side item */
+  .career-item.freelance { opacity: 0.6; }
+  .career-item.freelance .career-dot { width:4px; height:4px; margin-top:7px; background: var(--gold); border-color: rgba(181,134,30,0.3); }
+  .career-item.freelance .career-role { font-size:15px; font-weight:500; color:var(--text-mid); }
+  .career-item.freelance .career-badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+    color: var(--gold); border: 1px solid rgba(181,134,30,0.35);
+    padding: 1px 6px; border-radius: 2px; margin-left: 6px; vertical-align: middle;
   }
 
-  /* CARDS */
-  .cards-section {
-    padding: 2rem 2.5rem 3rem;
-  }
-  .section-label {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.4em;
-    color: #4a6460;
-    margin-bottom: 1.2rem;
-  }
-  .cards-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 1rem;
-  }
+  /* ── PORTFOLIO CARDS (押せる: 右下=0) ── */
+  .cards-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:1rem; }
+  @media (max-width: 580px) { .cards-grid { grid-template-columns:1fr; } }
+
   .portfolio-card {
-    border: 1px solid rgba(181, 134, 30, 0.35);
-    padding: 1.5rem;
-    background: rgba(10, 42, 38, 0.5);
+    border: 1px solid var(--border-gold);
+    padding: 1.6rem;
+    background: rgba(10,42,38,0.5);
+    position: relative; overflow: hidden; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.22s;
+    border-radius: var(--r-interactive);
+  }
+  .portfolio-card:hover { border-color:rgba(181,134,30,0.72); background:rgba(10,42,38,0.82); transform:translateY(-3px); }
+  .portfolio-card::before { content:''; position:absolute; top:0; left:24px; right:0; height:2px; background:var(--gold); border-radius:0 24px 0 0; }
+
+  .card-number { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.3em; color:var(--gold); margin-bottom:1rem; opacity:0.7; }
+  .card-title  { font-size:26px; font-weight:700; color:var(--text-hi); letter-spacing:-0.01em; margin-bottom:0.5rem; line-height:1.15; }
+  .card-desc   { font-size:14px; color:var(--text-lo); line-height:1.65; margin-bottom:1.4rem; }
+  .card-arrow  { font-family:'Space Mono',monospace; font-size:13px; color:var(--gold); letter-spacing:0.15em; transition:letter-spacing 0.2s; }
+  .portfolio-card:hover .card-arrow { letter-spacing:0.28em; }
+
+  /* ── SIDE WORK ── */
+  .side-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+  }
+  @media (max-width: 860px) { .side-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .side-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .side-card {
+    border: 1px solid var(--border-teal);
+    background: rgba(10,42,38,0.3);
     position: relative;
     overflow: hidden;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s, transform 0.2s;
-    border-radius: 2px;
+    border-radius: var(--r-static);
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
   }
-  .portfolio-card:hover {
-    border-color: rgba(181, 134, 30, 0.7);
-    background: rgba(10, 42, 38, 0.8);
-    transform: translateY(-2px);
+  .side-placeholder {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(135deg,
+        rgba(26,140,126,0.06) 0%,
+        rgba(4,32,30,0.0) 50%,
+        rgba(181,134,30,0.04) 100%);
+    display: flex; align-items: center; justify-content: center;
   }
-  .portfolio-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0;
-    height: 2px;
-    background: #b5861e;
+  .side-placeholder-icon {
+    width: 32px; height: 32px; opacity: 0.15;
   }
-  .card-number {
+  .side-card-label {
+    position: relative;
+    padding: 0.6rem 0.75rem;
+    background: linear-gradient(to top, rgba(4,32,30,0.85) 0%, transparent 100%);
     font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.3em;
-    color: #b5861e;
-    margin-bottom: 1rem;
-    opacity: 0.7;
-  }
-  .card-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #c8e0dd;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.5rem;
-    line-height: 1.3;
-  }
-  .card-desc {
-    font-size: 12px;
-    color: #4a7a74;
-    line-height: 1.6;
-    margin-bottom: 1.2rem;
-  }
-  .card-arrow {
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    color: #b5861e;
+    font-size: 11px;
     letter-spacing: 0.1em;
+    color: var(--text-mid);
+    line-height: 1.4;
   }
-  .corner-accent {
-    position: absolute; bottom: 10px; right: 10px;
-    width: 12px; height: 12px;
-    border-right: 1px solid rgba(181, 134, 30, 0.3);
-    border-bottom: 1px solid rgba(181, 134, 30, 0.3);
+  .side-coming {
+    font-size: 10px;
+    color: var(--teal-dim);
+    letter-spacing: 0.2em;
+    font-family: 'Space Mono', monospace;
+    margin-top: 2px;
   }
 
-  /* FOOTER */
+  /* ── FOOTER (押せない) ── */
   .footer {
     padding: 1.5rem 2.5rem;
-    border-top: 1px solid rgba(26, 140, 126, 0.1);
-    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid rgba(26,140,126,0.1);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
-  .footer-text {
-    font-family: 'Space Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.25em;
-    color: #2a5a54;
-  }
+  .footer-text { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:0.25em; color:var(--teal-faint); }
 
+  /* ── RESPONSIVE ── */
   @media (max-width: 600px) {
-    .nav, .hero, .cards-section, .footer { padding-left: 1.25rem; padding-right: 1.25rem; }
-    .divider { margin-left: 1.25rem; margin-right: 1.25rem; }
+    .nav       { padding: 1rem 1.25rem; }
+    .page-body { padding: 0 1.25rem; }
+    .footer    { padding: 1.25rem; }
+    .hero      { padding: 2.5rem 0 1.5rem; }
+    .section   { padding: 2rem 0; }
+    .lang-bar  { top: 0.6rem; right: 0.75rem; }
   }
 </style>
 </head>
 <body>
-<div class="portfolio-root">
-  <div class="grid-bg"></div>
+<div class="grid-bg"></div>
 
-  <!-- PASSWORD GATE -->
-  <div class="gate" id="gate">
-    <div class="gate-inner">
-      <div class="gate-logo">
-        <div class="gate-logo-dot"></div>
-        MG10 / PORTFOLIO SYSTEM
-        <div class="gate-logo-dot"></div>
-      </div>
-      <p class="gate-eyebrow">CLASSIFIED DOSSIER</p>
-      <p class="gate-title">RESTRICTED ACCESS<br>ENTER MISSION CODE</p>
-      <input
-        class="gate-input"
-        id="passInput"
-        type="password"
-        placeholder="· · · ·"
-        maxlength="4"
-        autocomplete="off"
-      />
-      <div class="error-msg" id="errorMsg">⬡ UNAUTHORIZED ⬡</div>
+<!-- ── FLOATING LANG BAR (gate only) ── -->
+<div class="lang-bar" id="floatLang">
+  <button class="lang-btn active" onclick="setLang('zh')">繁中</button>
+  <button class="lang-btn"        onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn"        onclick="setLang('en')">EN</button>
+</div>
+
+<!-- ════ PASSWORD GATE ════ -->
+<div class="gate" id="gate">
+  <div class="gate-inner">
+    <div class="gate-logo">
+      <div class="gate-logo-dot"></div>
+      <span data-key="logoText">PORTFOLIO / RESTRICTED</span>
+      <div class="gate-logo-dot"></div>
     </div>
+    <p class="gate-eyebrow" data-key="gateEyebrow">CLASSIFIED DOSSIER</p>
+    <p class="gate-heading"  data-key="gateHeading">RESTRICTED ACCESS<br>ENTER MISSION CODE</p>
+    <input class="gate-input" id="passInput" type="password" placeholder="· · · ·" maxlength="4" autocomplete="off" />
+    <div class="error-msg" id="errorMsg" data-key="errorMsg">▲ UNAUTHORIZED — TRY AGAIN</div>
   </div>
+</div>
 
-  <!-- MAIN PAGE -->
-  <div class="main-page" id="mainPage">
+<!-- ════ MAIN PAGE ════ -->
+<div class="main-page" id="mainPage">
 
-    <nav class="nav">
-      <div class="nav-logo">MG10 / DESIGN SYSTEM</div>
+  <nav class="nav">
+    <div class="nav-logo">YSC / DESIGN SYSTEM</div>
+    <div class="nav-right">
+      <div class="nav-lang">
+        <button class="lang-btn active" onclick="setLang('zh')">繁中</button>
+        <button class="lang-btn"        onclick="setLang('ja')">日本語</button>
+        <button class="lang-btn"        onclick="setLang('en')">EN</button>
+      </div>
       <div class="nav-status">
         <div class="status-dot"></div>
-        MISSION ACTIVE
+        <span data-key="navStatus">MISSION ACTIVE</span>
       </div>
-    </nav>
+    </div>
+  </nav>
 
+  <div class="page-body">
+
+    <!-- HERO -->
     <section class="hero">
-      <div class="hero-eyebrow">DESIGN DIRECTOR DOSSIER</div>
-      <h1 class="hero-title">
-        [YOUR NAME] |<br>
-        <span class="accent">Design Director</span> @ MG10
-      </h1>
-      <p class="hero-sub">// STRATEGY · LEADERSHIP · VISUAL CRAFT</p>
+      <div class="hero-eyebrow" data-key="heroDossier">DESIGN LEAD DOSSIER</div>
+      <h1 class="hero-name">Ying Shan, Chao</h1>
+      <p class="hero-role" data-key="heroRole">Design Lead</p>
       <div class="hero-tags">
-        <span class="hero-tag">PRODUCT DESIGN</span>
-        <span class="hero-tag">BRAND SYSTEMS</span>
-        <span class="hero-tag">DESIGN OPS</span>
-        <span class="hero-tag">TEAM LEADERSHIP</span>
+        <span class="hero-tag" data-key="tag1">PRODUCT DESIGN</span>
+        <span class="hero-tag" data-key="tag2">BRAND SYSTEMS</span>
+        <span class="hero-tag" data-key="tag3">DESIGN OPS</span>
+        <span class="hero-tag" data-key="tag4">TEAM LEADERSHIP</span>
       </div>
     </section>
 
     <div class="divider"></div>
 
-    <section class="cards-section">
-      <div class="section-label">— SELECTED OPERATIONS</div>
-      <div class="cards-grid">
-        <div class="portfolio-card">
-          <div class="card-number">01 / STRATEGY</div>
-          <div class="card-title">Strategy Case</div>
-          <div class="card-desc">Design strategy, research synthesis &amp; product direction.</div>
-          <div class="card-arrow">VIEW CASE →</div>
-          <div class="corner-accent"></div>
+    <!-- ABOUT + CAREER -->
+    <section class="section">
+      <div class="section-label" data-key="sectionAbout">— ABOUT &amp; EXPERIENCE</div>
+      <div class="about-career-grid">
+
+        <div class="about-block">
+          <p class="block-title" data-key="blockAbout">ABOUT</p>
+          <p class="about-text" data-key="aboutFull">Design lead with a systems mindset.</p>
         </div>
-        <div class="portfolio-card">
-          <div class="card-number">02 / LEADERSHIP</div>
-          <div class="card-title">Leadership &amp; Review</div>
-          <div class="card-desc">Team frameworks, critique culture &amp; design governance.</div>
-          <div class="card-arrow">VIEW CASE →</div>
-          <div class="corner-accent"></div>
+
+        <div class="career-block">
+          <p class="block-title" data-key="blockCareer">CAREER</p>
+          <div class="career-list">
+            <div class="career-item">
+              <div class="career-dot"></div>
+              <div>
+                <div class="career-year">2021 — <span data-key="now">NOW</span></div>
+                <div class="career-role" data-key="role1">Design Lead</div>
+                <div class="career-company">株式会社リクルート</div>
+              </div>
+            </div>
+            <div class="career-item">
+              <div class="career-dot"></div>
+              <div>
+                <div class="career-year">2016 — 2021</div>
+                <div class="career-role" data-key="role2">UX Designer</div>
+                <div class="career-company">KLab Inc.</div>
+              </div>
+            </div>
+            <div class="career-item">
+              <div class="career-dot"></div>
+              <div>
+                <div class="career-year">2012 — 2016</div>
+                <div class="career-role" data-key="role3">UI Designer</div>
+                <div class="career-company">HEROZ, Inc.</div>
+              </div>
+            </div>
+            <div class="career-item">
+              <div class="career-dot"></div>
+              <div>
+                <div class="career-year">2012</div>
+                <div class="career-role" data-key="role4">Game Planner</div>
+                <div class="career-company">eitarosoft, Inc.</div>
+              </div>
+            </div>
+            <div class="career-item freelance">
+              <div class="career-dot"></div>
+              <div>
+                <div class="career-year">2025 — <span data-key="now2">NOW</span></div>
+                <div class="career-role" data-key="roleFreelance">Graphic Designer <span class="career-badge" data-key="freelanceBadge">FREELANCE</span></div>
+                <div class="career-company" data-key="freelanceDesc">Anime &amp; game goods, logo, packaging</div>
+              </div>
+            </div>
+            <div class="career-item">
+              <div class="career-dot" style="background:var(--teal-dim);border-color:rgba(74,100,96,0.4);"></div>
+              <div>
+                <div class="career-year" data-key="eduYear">— <span data-key="eduLabel">Education</span></div>
+                <div class="career-role" data-key="eduRole">B.S. Industrial Design</div>
+                <div class="career-company" data-key="eduSchool">National Cheng Kung University</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="portfolio-card">
-          <div class="card-number">03 / CRAFT</div>
-          <div class="card-title">Visual Craft</div>
-          <div class="card-desc">High-fidelity UI, motion &amp; brand expression at scale.</div>
-          <div class="card-arrow">VIEW CASE →</div>
-          <div class="corner-accent"></div>
-        </div>
+
       </div>
     </section>
 
-    <footer class="footer">
-      <span class="footer-text">© MG10 DESIGN SYSTEM — ALL RIGHTS RESERVED</span>
-      <span class="footer-text">CLEARANCE LEVEL: DIRECTOR</span>
-    </footer>
+    <div class="divider"></div>
 
-  </div>
+    <!-- PORTFOLIO CARDS -->
+    <section class="section">
+      <div class="section-label" data-key="sectionWork">— SELECTED OPERATIONS</div>
+      <div class="cards-grid">
+
+        <div class="portfolio-card">
+          <div class="card-number">01 / <span data-key="cat1">STRATEGY</span></div>
+          <div class="card-title" data-key="cardTitle1">HOT PEPPER Beauty — Design Overhaul</div>
+          <div class="card-desc"  data-key="cardDesc1">Large-scale redesign PM. Scope definition, stakeholder alignment &amp; data-driven decision-making. Includes dark mode A/B test learnings.</div>
+          <div class="card-arrow" data-key="viewCase">VIEW CASE →</div>
+        </div>
+
+        <div class="portfolio-card">
+          <div class="card-number">02 / <span data-key="cat2">LEADERSHIP</span></div>
+          <div class="card-title" data-key="cardTitle2">SALON BOARD — Design System &amp; Team</div>
+          <div class="card-desc"  data-key="cardDesc2">SP redesign from design system foundations. Team operations, review culture &amp; process efficiency across 3 products.</div>
+          <div class="card-arrow" data-key="viewCase2">VIEW CASE →</div>
+        </div>
+
+        <div class="portfolio-card">
+          <div class="card-number">03 / <span data-key="cat3">CRAFT</span></div>
+          <div class="card-title" data-key="cardTitle3">HOT PEPPER Beauty — ビビビ祭</div>
+          <div class="card-desc"  data-key="cardDesc3">Event campaign art direction &amp; production management. Visual identity, LP design &amp; cross-team QA.</div>
+          <div class="card-arrow" data-key="viewCase3">VIEW CASE →</div>
+        </div>
+
+        <div class="portfolio-card">
+          <div class="card-number">04 / <span data-key="cat4">RESEARCH</span></div>
+          <div class="card-title" data-key="cardTitle4">Field Research — Dubai Games Show</div>
+          <div class="card-desc"  data-key="cardDesc4">On-site font preference survey at Dubai Games Show for Captain Tsubasa. Also: BLEACH global rollout across 7 languages.</div>
+          <div class="card-arrow" data-key="viewCase4">VIEW CASE →</div>
+        </div>
+
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SIDE WORK -->
+    <section class="section">
+      <div class="section-label" data-key="sectionSide">— SIDE WORK / GRAPHIC DESIGN</div>
+      <div class="side-grid">
+
+        <div class="side-card">
+          <div class="side-placeholder">
+            <svg class="side-placeholder-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="28" height="28" rx="2" stroke="#1ab09c" stroke-width="1.5"/>
+              <circle cx="11" cy="12" r="3" stroke="#1ab09c" stroke-width="1.5"/>
+              <path d="M2 22l8-6 6 5 5-4 9 7" stroke="#1ab09c" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="side-card-label">
+            <div data-key="sideItem1">Anime goods packaging</div>
+            <div class="side-coming" data-key="sideComingSoon">IMAGE COMING SOON</div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-placeholder">
+            <svg class="side-placeholder-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="28" height="28" rx="2" stroke="#1ab09c" stroke-width="1.5"/>
+              <circle cx="11" cy="12" r="3" stroke="#1ab09c" stroke-width="1.5"/>
+              <path d="M2 22l8-6 6 5 5-4 9 7" stroke="#1ab09c" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="side-card-label">
+            <div data-key="sideItem2">Logo design</div>
+            <div class="side-coming" data-key="sideComingSoon2">IMAGE COMING SOON</div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-placeholder">
+            <svg class="side-placeholder-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="28" height="28" rx="2" stroke="#1ab09c" stroke-width="1.5"/>
+              <circle cx="11" cy="12" r="3" stroke="#1ab09c" stroke-width="1.5"/>
+              <path d="M2 22l8-6 6 5 5-4 9 7" stroke="#1ab09c" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="side-card-label">
+            <div data-key="sideItem3">Game goods design</div>
+            <div class="side-coming" data-key="sideComingSoon3">IMAGE COMING SOON</div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-placeholder">
+            <svg class="side-placeholder-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="2" width="28" height="28" rx="2" stroke="#1ab09c" stroke-width="1.5"/>
+              <circle cx="11" cy="12" r="3" stroke="#1ab09c" stroke-width="1.5"/>
+              <path d="M2 22l8-6 6 5 5-4 9 7" stroke="#1ab09c" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="side-card-label">
+            <div data-key="sideItem4">Packaging design</div>
+            <div class="side-coming" data-key="sideComingSoon4">IMAGE COMING SOON</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- /page-body -->
+
+  <footer class="footer">
+    <span class="footer-text">© YING SHAN, CHAO — ALL RIGHTS RESERVED</span>
+    <span class="footer-text" data-key="clearance">CLEARANCE LEVEL: LEAD</span>
+  </footer>
+
 </div>
 
 <script>
-  const input = document.getElementById('passInput');
-  const gate = document.getElementById('gate');
+  /* ── i18n strings ── */
+  const strings = {
+    zh: {
+      logoText:    'PORTFOLIO / 限制訪問',
+      gateEyebrow: '機密檔案',
+      gateHeading: '限制訪問<br>請輸入通行代碼',
+      errorMsg:    '▲ 驗證失敗 — 請重試',
+      navStatus:   '任務進行中',
+      heroDossier: '設計主管檔案',
+      heroRole:    '設計主管',
+      tag1: '產品設計', tag2: '品牌系統', tag3: '設計營運', tag4: '團隊領導',
+      sectionAbout: '— 關於 &amp; 經歷',
+      blockAbout:  '關於',
+      aboutFull:   '成功大學工業設計系畢業，擁有近 10 年的 UI/UX 設計及設計管理經驗。<br><br>曾於 KLab 株式会社擔任 UI/UX 設計師，負責 7 語言對應的全球發行動作手遊《BLEACH Brave Souls》的介面設計、宣傳視覺及品質管理，建立設計規範與素材指南，大幅提升跨成員協作效率。<br><br>現任職於株式会社リクルート，擔任設計 Lead，統籌日本最大美容預約平台 HOT PEPPER Beauty 及其旗下 B2B 業務管理系統 SALON BOARD、求人平台 HPB WORK 的設計工作。帶領最多 7 名設計師，從 UX 策略制定、Design System 建構、設計審查到預算取得、跨職能推進，全程主導。<br><br>擅長在複雜的商業需求與使用者體驗之間找到平衡點，並能將設計思路具體化為可執行的解決方案。對 B2C 與 B2B 服務、遊戲 UI、視覺設計均有深度實戰經驗。',
+      blockCareer: '經歷',
+      now:         '至今',
+      now2:        '至今',
+      roleFreelance: '平面設計師',
+      freelanceBadge: '接案',
+      freelanceDesc: '動漫遊戲周邊・標誌・包裝設計',
+      role1: '設計主管', role2: 'UX 設計師', role3: 'UI 設計師', role4: '遊戲策劃',
+      eduYear: '—', eduLabel: '學歷',
+      eduRole: '工業設計學士', eduSchool: '國立成功大學',
+      sectionWork:  '— 精選作品',
+      cat1: '策略', cat2: '領導力', cat3: '視覺工藝', cat4: '研究',
+      cardTitle1: 'HOT PEPPER Beauty — 設計翻新', cardTitle2: 'SALON BOARD — 設計系統與團隊', cardTitle3: 'HOT PEPPER Beauty — ビビビ祭', cardTitle4: '現場調研 — 杜拜遊戲展',
+      cardDesc1:  '大規模改版PM。範圍定義、利害關係人溝通與數據決策。含深色模式A/B測試的實證分析。',
+      cardDesc2:  '從設計系統建構開始的SP版重新設計。跨3個產品的團隊營運、審查文化與製作效率化。',
+      cardDesc3:  '活動視覺統籌與製作管理。視覺識別、LP設計及跨部門品質控管。',
+      cardDesc4:  '為《隊長小翼》在杜拜遊戲展進行字型偏好現場問卷調查。另含BLEACH 7語言全球展開的製作管理。',
+      viewCase: '查看案例 →', viewCase2: '查看案例 →', viewCase3: '查看案例 →', viewCase4: '查看案例 →',
+      sectionSide: '— 接案 / 平面設計',
+      sideItem1: '動漫周邊包裝', sideItem2: '標誌設計', sideItem3: '遊戲周邊設計', sideItem4: '包裝設計',
+      sideComingSoon: '圖片即將上傳', sideComingSoon2: '圖片即將上傳', sideComingSoon3: '圖片即將上傳', sideComingSoon4: '圖片即將上傳',
+      clearance: '權限等級：主管',
+    },
+    ja: {
+      logoText:    'PORTFOLIO / アクセス制限',
+      gateEyebrow: '機密ファイル',
+      gateHeading: 'アクセス制限<br>ミッションコードを入力',
+      errorMsg:    '▲ 認証失敗 — 再試行してください',
+      navStatus:   'ミッション進行中',
+      heroDossier: 'デザインリード概要',
+      heroRole:    'デザインリード',
+      tag1: 'プロダクトデザイン', tag2: 'ブランドシステム', tag3: 'デザインOps', tag4: 'チームリーダーシップ',
+      sectionAbout: '— 自己紹介 &amp; 経歴',
+      blockAbout:  '自己紹介',
+      aboutFull:   '成功大學（国立成功大学）工業デザイン学科卒業。UI/UXデザインおよびデザインマネジメントの分野で約10年のキャリアを持つ。<br><br>KLab株式会社にてUI/UXデザイナーとして、7言語対応のグローバル配信アクションゲーム『BLEACH Brave Souls』のインターフェースデザイン、プロモーションビジュアル、品質管理を担当。デザインガイドラインと素材指針を整備し、メンバー間の協業効率を大幅に向上させた。<br><br>現在は株式会社リクルートにてデザインリードとして、日本最大の美容予約プラットフォーム「HOT PEPPER Beauty」および傘下のB2B業務管理システム「SALON BOARD」、求人プラットフォーム「HPB WORK」のデザイン全般を統括。最大7名のデザイナーを率い、UX戦略の策定からDesign Systemの構築、デザインレビュー、予算獲得、クロスファンクショナルな推進まで一貫してリード。<br><br>複雑なビジネス要件とユーザー体験のバランスを見出すことを得意とし、デザインのビジョンを実行可能なソリューションへと具体化する。B2C・B2Bサービス、ゲームUI、ビジュアルデザインのいずれにも深い実務経験を持つ。',
+      blockCareer: '経歴',
+      now:         '現在',
+      now2:        '現在',
+      roleFreelance: 'グラフィックデザイナー',
+      freelanceBadge: 'フリーランス',
+      freelanceDesc: 'アニメ・ゲームグッズ、ロゴ、パッケージ制作',
+      role1: 'デザインリード', role2: 'UXデザイナー', role3: 'UIデザイナー', role4: 'ゲームプランナー',
+      eduYear: '—', eduLabel: '学歴',
+      eduRole: '工業デザイン学士', eduSchool: '国立成功大学',
+      sectionWork:  '— 選定プロジェクト',
+      cat1: '戦略', cat2: 'リーダーシップ', cat3: 'ビジュアル', cat4: 'リサーチ',
+      cardTitle1: 'HOT PEPPER Beauty — デザイン刷新', cardTitle2: 'SALON BOARD — デザインシステム＆チーム', cardTitle3: 'HOT PEPPER Beauty — ビビビ祭', cardTitle4: 'フィールドリサーチ — ドバイゲームショー',
+      cardDesc1:  '大規模リニューアルのPM。スコープ定義、ステークホルダー調整、データによる意思決定。ダークモードA/Bテストの検証含む。',
+      cardDesc2:  'デザインシステム構築から始めたSP版リニューアル。3プロダクトを横断するチーム運営・レビュー文化・制作効率化。',
+      cardDesc3:  'イベントキャンペーンのアートディレクション＆制作管理。ビジュアルアイデンティティ、LPデザイン、クロスチームQA。',
+      cardDesc4:  'キャプテン翼のドバイゲームショーでフォント好感度の現地アンケート調査を実施。BLEACH 7言語グローバル展開の制作進行も含む。',
+      viewCase: 'ケースを見る →', viewCase2: 'ケースを見る →', viewCase3: 'ケースを見る →', viewCase4: 'ケースを見る →',
+      sectionSide: '— 副業 / グラフィックデザイン',
+      sideItem1: 'アニメグッズパッケージ', sideItem2: 'ロゴデザイン', sideItem3: 'ゲームグッズデザイン', sideItem4: 'パッケージデザイン',
+      sideComingSoon: '画像準備中', sideComingSoon2: '画像準備中', sideComingSoon3: '画像準備中', sideComingSoon4: '画像準備中',
+      clearance: 'クリアランスレベル: リード',
+    },
+    en: {
+      logoText:    'PORTFOLIO / RESTRICTED',
+      gateEyebrow: 'CLASSIFIED DOSSIER',
+      gateHeading: 'RESTRICTED ACCESS<br>ENTER MISSION CODE',
+      errorMsg:    '▲ UNAUTHORIZED — TRY AGAIN',
+      navStatus:   'MISSION ACTIVE',
+      heroDossier: 'DESIGN LEAD DOSSIER',
+      heroRole:    'Design Lead',
+      tag1: 'PRODUCT DESIGN', tag2: 'BRAND SYSTEMS', tag3: 'DESIGN OPS', tag4: 'TEAM LEADERSHIP',
+      sectionAbout: '— ABOUT &amp; EXPERIENCE',
+      blockAbout:  'ABOUT',
+      aboutFull:   'Graduate of National Cheng Kung University, Department of Industrial Design. Nearly 10 years of experience in UI/UX design and design management.<br><br>At KLab Co., Ltd., worked as a UI/UX designer on <em>BLEACH Brave Souls</em> — a globally released action mobile game supporting 7 languages — handling interface design, promotional visuals, and quality control. Established design guidelines and asset standards that significantly improved cross-team collaboration efficiency.<br><br>Currently at Recruit Co., Ltd. as Design Lead, overseeing design across Japan\'s largest beauty booking platform HOT PEPPER Beauty, its B2B salon management system SALON BOARD, and job-listing platform HPB WORK. Leading a team of up to 7 designers end-to-end: from UX strategy and Design System development to design review, budget acquisition, and cross-functional execution.<br><br>Specialises in finding balance between complex business requirements and user experience, translating design thinking into actionable solutions. Deep hands-on experience across B2C and B2B services, game UI, and visual design.',
+      blockCareer: 'CAREER',
+      now:         'NOW',
+      now2:        'NOW',
+      roleFreelance: 'Graphic Designer',
+      freelanceBadge: 'FREELANCE',
+      freelanceDesc: 'Anime & game goods, logo, packaging',
+      role1: 'Design Lead', role2: 'UX Designer', role3: 'UI Designer', role4: 'Game Planner',
+      eduYear: '—', eduLabel: 'Education',
+      eduRole: 'B.S. Industrial Design', eduSchool: 'National Cheng Kung University',
+      sectionWork:  '— SELECTED OPERATIONS',
+      cat1: 'STRATEGY', cat2: 'LEADERSHIP', cat3: 'CRAFT', cat4: 'RESEARCH',
+      cardTitle1: 'HOT PEPPER Beauty — Design Overhaul', cardTitle2: 'SALON BOARD — Design System & Team', cardTitle3: 'HOT PEPPER Beauty — ビビビ祭', cardTitle4: 'Field Research — Dubai Games Show',
+      cardDesc1:  'Large-scale redesign PM. Scope definition, stakeholder alignment & data-driven decision-making. Includes dark mode A/B test learnings.',
+      cardDesc2:  'SP redesign from design system foundations. Team operations, review culture & process efficiency across 3 products.',
+      cardDesc3:  'Event campaign art direction & production management. Visual identity, LP design & cross-team QA.',
+      cardDesc4:  'On-site font preference survey at Dubai Games Show for Captain Tsubasa. Also: BLEACH global rollout across 7 languages.',
+      viewCase: 'VIEW CASE →', viewCase2: 'VIEW CASE →', viewCase3: 'VIEW CASE →', viewCase4: 'VIEW CASE →',
+      sectionSide: '— SIDE WORK / GRAPHIC DESIGN',
+      sideItem1: 'Anime goods packaging', sideItem2: 'Logo design', sideItem3: 'Game goods design', sideItem4: 'Packaging design',
+      sideComingSoon: 'IMAGE COMING SOON', sideComingSoon2: 'IMAGE COMING SOON', sideComingSoon3: 'IMAGE COMING SOON', sideComingSoon4: 'IMAGE COMING SOON',
+      clearance: 'CLEARANCE LEVEL: LEAD',
+    }
+  };
+
+  let currentLang = 'zh';
+
+  function setLang(lang) {
+    currentLang = lang;
+    const s = strings[lang];
+
+    /* update html lang attribute */
+    const langMap = { zh: 'zh-TW', ja: 'ja', en: 'en' };
+    document.documentElement.lang = langMap[lang];
+
+    /* update all data-key elements */
+    document.querySelectorAll('[data-key]').forEach(el => {
+      const key = el.dataset.key;
+      if (s[key] !== undefined) el.innerHTML = s[key];
+    });
+
+    /* update all lang buttons */
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      const btnLang = btn.getAttribute('onclick').match(/'(\w+)'/)[1];
+      btn.classList.toggle('active', btnLang === lang);
+    });
+  }
+
+  /* ── gate logic ── */
+  const input    = document.getElementById('passInput');
+  const gate     = document.getElementById('gate');
   const mainPage = document.getElementById('mainPage');
   const errorMsg = document.getElementById('errorMsg');
+  const floatLang = document.getElementById('floatLang');
 
   input.focus();
 
-  input.addEventListener('input', function () {
+  input.addEventListener('input', function() {
     errorMsg.classList.remove('visible');
     input.classList.remove('error-border');
     if (this.value.length === 4) checkPass();
   });
-
-  input.addEventListener('keydown', function (e) {
+  input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') checkPass();
   });
 
   function checkPass() {
     if (input.value === '2525') {
       gate.classList.add('exiting');
-      setTimeout(() => {
-        gate.classList.add('hidden');
-        mainPage.classList.add('visible');
-      }, 850);
+      floatLang.style.display = 'none';
+      setTimeout(() => { gate.classList.add('hidden'); mainPage.classList.add('visible'); }, 850);
     } else {
       input.classList.add('shake', 'error-border');
       errorMsg.classList.add('visible');
-      setTimeout(() => {
-        input.classList.remove('shake');
-        input.value = '';
-      }, 400);
+      setTimeout(() => { input.classList.remove('shake'); input.value = ''; }, 420);
     }
   }
+
+  /* init */
+  setLang('zh');
 </script>
 </body>
 </html>
